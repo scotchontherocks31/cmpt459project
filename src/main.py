@@ -11,7 +11,18 @@ def clean_database(data):
 
 	return data
 
-def handle outliers(data):
+def remove_outlers(data, column):
+	mean = data[column].mean()
+	std = data[column].std()
+
+	cutoff = std * 3
+	lower_bound, upper_bound = mean + std, mean - std
+	for index, row in data:
+		if row[column] > upper_bound or row[column] <= lowerbound:
+			data.drop(index, axis=0, inplace=True)
+	return
+
+def handle_outliers(data):
 	return data
 
 def main():
