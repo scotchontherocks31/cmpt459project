@@ -1,0 +1,8 @@
+#other files
+*.DS_Store
+
+# Byte-compiled
+__pycache__/
+
+# Jupyter Notebook
+.ipynb_checkpoints

@@ -3,9 +3,10 @@ import numpy as np
 import os
 import math
 
-train_data = pd.read_csv('data/cases_train.csv')
-test_data = pd.read_csv('data/cases_test.csv')
-location_data= pd.read_csv('data/locaiton.csv')
+o = os.getcwd()
+train_data = pd.read_csv(o + "\\..\\data\\cases_train.csv", parse_dates = True)
+test_data = pd.read_csv(o + "\\..\\data\\cases_test.csv", parse_dates = True)
+location_data= pd.read_csv(o + "\\..\\data\\location.csv", parse_dates = True)
 
 def clean_database(data):
 
