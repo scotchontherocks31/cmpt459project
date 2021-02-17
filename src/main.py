@@ -12,7 +12,7 @@ def clean_database(data):
 
 	return data
 
-def remove_outlers(data, column):
+def gaussian_remove_outlers(data, column):
 	mean = data[column].mean()
 	std = data[column].std()
 
