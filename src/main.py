@@ -1,5 +1,6 @@
 import pandas as pd 
 import numpy as np 
+from tqdm import tqdm
 import os
 import re
 import math
@@ -32,30 +33,34 @@ def clean(data):
 	data.drop(['source', 'additional_information'], axis=1, inplace=True)
 
 	#remove rows containing NaN values with minimal loss to data
-	data.dropna(subset['longitude', 'latitude', 'province', 'date_confirmation'], inplace=True)
+	data.dropna(subset=['longitude', 'latitude', 'province', 'date_confirmation'], inplace=True)
 
 	#standardize age formatting
-	for index, row in data.iterrows():
-		if row['age'] != np.NaN:
+	for index, row in tqdm(data.iterrows()):
+		if row['age'] is not np.NaN:
 			m = re.match("(\d{1,})-(\d{1,})", str(row['age']))
 			if m:
 				data.loc[index,'age'] = round(sum(map(int, m.groups()))/2)
-				n = re.match("(\d{1,})\W",str(row['age']))
-			if n:
-				data.loc[index,'age'] = m.groups()[0]
+				continue			
+			
+			o = re.match("(\d{1,})\W",str(row['age']))
+			if o:
+				#print(row['age'])
+				data.loc[index,'age'] = o.groups()[0]
+				continue
 
 	return data	
 
 
 def main():
 	print("\n\nTeam Losers: Milestone 1\n\n")
-	print("Performing Data Cleaning and Handling of NaN Values...")
+	print("Performing Data Cleaning and Handling of NaN Values...\n")
 
-	print("Cleaning Train Data...")
+	print("Cleaning Train Data...\n")
 	cleaned_train = clean(train_data)
 
-	print("Cleaning Test Data...")
-	cleaned_test = clea(test_data)
+	print("Cleaning Test Data...\n")
+	cleaned_test = clean(test_data)
 
 
 	return
