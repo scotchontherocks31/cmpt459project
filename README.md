@@ -20,10 +20,11 @@ The notebook can be opened by running the following in terminal:
 jupyter notebook
 ```
 and using the browser to open the file.
-The remaining code can by run by simply calling `main.py` in terminal:
+The remaining code can by run by simply calling `main.py` in:
 ```bash
 python main.py
 ```
+!Note: Must be in the `src/` folder when running the file
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)

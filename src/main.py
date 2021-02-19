@@ -22,7 +22,7 @@ def gaussian_remove_outliers(data, column):
 	cutoff = std * 3
 	lower_bound, upper_bound = mean + cutoff, mean - cutoff
 	for index, row in data:
-		if row[column] > upper_bound or row[column] <= lowerbound:
+		if row[column] > upper_bound or row[column] <= lower_bound:
 			data.drop(index, axis=0, inplace=True)
 	return
 
@@ -53,9 +53,9 @@ def clean(data):
 				data.loc[index,'age'] = n.groups()[0]
 				continue
 	#fills in missing ages using linear interpolation// might want to look into sklearn imputers
-	data['age'] = data['age'].interpolate()
-	data['age'] = data['age'].round().astype(int)
-	data.to_csv(o + "\\..\\results\\faulty.csv", index=False)
+	data['age'] = data['age'].interpolate(inplace=True)
+
+	#data.to_csv(o + "\\..\\results\\faulty.csv", index=False)
 	#replace any remaining ages with the average
 	data['age'].fillna(data['age'].dropna().mean(), inplace=True)
 	#round the ages to whole ints
