@@ -3,6 +3,7 @@ import numpy as np
 from tqdm import tqdm
 import os
 import re
+import random
 import math
 
 o = os.getcwd()
@@ -33,21 +34,39 @@ def clean(data):
 	data.drop(['source', 'additional_information'], axis=1, inplace=True)
 
 	#remove rows containing NaN values with minimal loss to data
-	data.dropna(subset=['longitude', 'latitude', 'province', 'date_confirmation'], inplace=True)
+	data.dropna(subset=['longitude', 'latitude', 'province', 'country','date_confirmation'], inplace=True)
 
 	#standardize age formatting
 	for index, row in tqdm(data.iterrows()):
 		if row['age'] is not np.NaN:
+
+			#catch 15-35
 			m = re.match("(\d{1,})-(\d{1,})", str(row['age']))
 			if m:
 				data.loc[index,'age'] = round(sum(map(int, m.groups()))/2)
 				continue			
 			
-			o = re.match("(\d{1,})\W",str(row['age']))
-			if o:
+			#catch 80+
+			n = re.match("(\d{1,})\W", str(row['age']))
+			if n:
 				#print(row['age'])
-				data.loc[index,'age'] = o.groups()[0]
+				data.loc[index,'age'] = n.groups()[0]
 				continue
+	#fills in missing ages using linear interpolation// might want to look into sklearn imputers
+	data['age'] = data['age'].interpolate()
+	data['age'] = data['age'].round().astype(int)
+	data.to_csv(o + "\\..\\results\\faulty.csv", index=False)
+	#replace any remaining ages with the average
+	data['age'].fillna(data['age'].dropna().mean(), inplace=True)
+	#round the ages to whole ints
+	data['age'] = data['age'].round().astype(int)
+
+	#imputing categorical sex values based on random values
+	list_sex = data['sex'].dropna().values
+	data['sex'] = data['sex'].apply(lambda x: np.random.choice(list_sex))
+
+	#imputing categorical sex values based on mode
+	#data['sex'].fillna(data['sex'].dropna().mode()[0], inplace=True)
 
 	return data	
 
@@ -58,10 +77,11 @@ def main():
 
 	print("Cleaning Train Data...\n")
 	cleaned_train = clean(train_data)
+	cleaned_train.to_csv(o + "\\..\\results\\cases_test_processed.csv", index=False)
 
 	print("Cleaning Test Data...\n")
 	cleaned_test = clean(test_data)
-
+	cleaned_test.to_csv(o + "\\..\\results\\cases_train_processed.csv", index=False)
 
 	return
 
