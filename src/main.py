@@ -18,12 +18,29 @@ def gaussian_remove_outliers(data, column):
 
 	cutoff = std * 3
 	lower_bound, upper_bound = mean + cutoff, mean - cutoff
-	for index, row in data:
+	for index, row in data.iterrows():
 		if row[column] > upper_bound or row[column] <= lower_bound:
 			data.drop(index, axis=0, inplace=True)
-	return
+
+	return data
+
+def geog_remove_outliers(data):
+	lam, lom = data['latitude'].mean(), data['longitude'].mean()
+	lasd, losd = data['latitude'].std(), data['longitude'].std()
+	cutla, cutlo = lasd*2, losd*2
+
+	for index, row in tqdm(data.iterrows()):
+	    if (row['longitude'] > (lom + cutlo) or row['longitude'] <= (lom - cutlo)) and (row['latitude'] > (lam + cutla) or row['latitude']<= (lam - cutla)):
+	        data.drop(index, axis=0, inplace=True)
+
+    return data
 
 def handle_outliers(data):
+
+	#handle oultier ages
+	data = gaussian_remove_outliers(data, age)
+	data = geog_remove_outliers(data)
+
 	return data
 
 def clean_age(data): #handles specific imputations of age data
@@ -88,6 +105,11 @@ def main():
 	print("Cleaning Test Data...\n")
 	cleaned_test = clean(test_data)
 	cleaned_test.to_csv(o + "\\..\\results\\cases_test_processed.csv", index=False)
+
+	print("\nRemoving Outliers from Train Data\n")
+	processed_train = handle_outliers(cleaned_train)
+
+	print("Outliers Removed")
 
 	return
 
