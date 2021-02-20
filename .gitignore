@@ -1,6 +1,6 @@
 #other files
 *.DS_Store
-
+/.vscode
 # Byte-compiled
 __pycache__/
 
