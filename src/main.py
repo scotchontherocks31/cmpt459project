@@ -8,6 +8,7 @@ import pandas as pd
 
 
 o = os.getcwd()
+
 train_data = pd.read_csv(o + "\\..\\data\\cases_train.csv", parse_dates = True)
 test_data = pd.read_csv(o + "\\..\\data\\cases_test.csv", parse_dates = True)
 location_data= pd.read_csv(o + "\\..\\data\\location.csv", parse_dates = True)
