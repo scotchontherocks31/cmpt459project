@@ -8,9 +8,21 @@ import pandas as pd
 
 
 o = os.getcwd()
+
 train_data = pd.read_csv(o + "\\..\\data\\cases_train.csv", parse_dates = True)
 test_data = pd.read_csv(o + "\\..\\data\\cases_test.csv", parse_dates = True)
 location_data= pd.read_csv(o + "\\..\\data\\location.csv", parse_dates = True)
+test_processed_path = o + "\\..\\results\\cases_test_processed.csv"
+train_processed_path = o + "\\..\\results\\cases_train_processed.csv"
+
+#For Mac/Linux
+'''
+train_data = pd.read_csv(o + "/../data/cases_train.csv", parse_dates = True)
+test_data = pd.read_csv(o + "/../data/cases_test.csv", parse_dates = True)
+location_data= pd.read_csv(o + "/../data/location.csv", parse_dates = True)
+test_processed_path = o + "/../results/cases_test_processed.csv"
+train_processed_path = o + "/../results/cases_train_processed.csv"
+'''
 
 def gaussian_remove_outliers(data, column):
 	mean = data[column].mean()
@@ -102,11 +114,11 @@ def main():
 
 	print("Cleaning Test Data...\n")
 	cleaned_test = clean(test_data)
-	cleaned_test.to_csv(o + "\\..\\results\\cases_test_processed.csv", index=False)
+	cleaned_test.to_csv(test_propcessed_path, index=False)
 
 	print("\nRemoving Outliers from Train Data\n")
 	processed_train = handle_outliers(cleaned_train)
-	processed_train.to_csv(o + "\\..\\results\\cases_train_processed.csv", index=False)
+	processed_train.to_csv(train_processed_path, index=False)
 
 	print("Outliers Removed")
 
