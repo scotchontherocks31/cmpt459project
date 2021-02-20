@@ -15,31 +15,30 @@ location_data= pd.read_csv(o + "\\..\\data\\location.csv", parse_dates = True)
 def gaussian_remove_outliers(data, column):
 	mean = data[column].mean()
 	std = data[column].std()
-
 	cutoff = std * 3
-	lower_bound, upper_bound = mean + cutoff, mean - cutoff
-	for index, row in data.iterrows():
+	lower_bound, upper_bound = mean - cutoff, mean + cutoff
+
+	lam, lom = data['latitude'].mean(), data['longitude'].mean()
+	lasd, losd = data['latitude'].std(), data['longitude'].std()
+	cutla, cutlo = lasd*2, losd*2
+	lbla, lblo = lam - cutla, lom - cutlo
+	ubla, ublo = lam + cutla, lom + cutlo
+
+	for index, row in tqdm(data.iterrows()):
 		if row[column] > upper_bound or row[column] <= lower_bound:
+			data.drop(index, axis=0, inplace=True)
+			continue
+
+		if (row['longitude'] > ublo or row['longitude'] <= lblo) and (row['latitude'] > ubla or row['latitude']<= lbla):
 			data.drop(index, axis=0, inplace=True)
 
 	return data
 
-def geog_remove_outliers(data):
-	lam, lom = data['latitude'].mean(), data['longitude'].mean()
-	lasd, losd = data['latitude'].std(), data['longitude'].std()
-	cutla, cutlo = lasd*2, losd*2
-
-	for index, row in tqdm(data.iterrows()):
-	    if (row['longitude'] > (lom + cutlo) or row['longitude'] <= (lom - cutlo)) and (row['latitude'] > (lam + cutla) or row['latitude']<= (lam - cutla)):
-	        data.drop(index, axis=0, inplace=True)
-
-    return data
-
 def handle_outliers(data):
 
 	#handle oultier ages
-	data = gaussian_remove_outliers(data, age)
-	data = geog_remove_outliers(data)
+	data = gaussian_remove_outliers(data, 'age')
+	#data = geog_remove_outliers(data)
 
 	return data
 
@@ -99,8 +98,7 @@ def main():
 	print("Performing Data Cleaning and Handling of NaN Values...\n")
 
 	print("Cleaning Train Data...\n")
-	cleaned_train = clean(train_data)
-	cleaned_train.to_csv(o + "\\..\\results\\cases_train_processed.csv", index=False)
+	cleaned_train = clean(train_data)	
 
 	print("Cleaning Test Data...\n")
 	cleaned_test = clean(test_data)
@@ -108,6 +106,7 @@ def main():
 
 	print("\nRemoving Outliers from Train Data\n")
 	processed_train = handle_outliers(cleaned_train)
+	processed_train.to_csv(o + "\\..\\results\\cases_train_processed.csv", index=False)
 
 	print("Outliers Removed")
 
