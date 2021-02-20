@@ -28,8 +28,6 @@ def handle_outliers(data):
 
 def clean_age(data): #handles specific imputations of age data
 	data['age'].interpolate(inplace=True)
-	data.to_csv(o + "\\..\\results\\faulty.csv", index=False)
-
 	#replace any remaining ages with the average
 	mean = data['age'].sum()/ len(data['age'])
 	data['age'].fillna(mean, inplace=True)
