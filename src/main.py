@@ -1,19 +1,16 @@
-import pandas as pd 
 import numpy as np 
 from tqdm import tqdm
 import os
 import re
 import random
 import math
+import pandas as pd 
+
 
 o = os.getcwd()
 train_data = pd.read_csv(o + "\\..\\data\\cases_train.csv", parse_dates = True)
 test_data = pd.read_csv(o + "\\..\\data\\cases_test.csv", parse_dates = True)
 location_data= pd.read_csv(o + "\\..\\data\\location.csv", parse_dates = True)
-
-def clean_database(data):
-
-	return data
 
 def gaussian_remove_outliers(data, column):
 	mean = data[column].mean()
@@ -28,6 +25,18 @@ def gaussian_remove_outliers(data, column):
 
 def handle_outliers(data):
 	return data
+
+def clean_age(data): #handles specific imputations of age data
+	data['age'].interpolate(inplace=True)
+	data.to_csv(o + "\\..\\results\\faulty.csv", index=False)
+
+	#replace any remaining ages with the average
+	mean = data['age'].sum()/ len(data['age'])
+	data['age'].fillna(mean, inplace=True)
+	#round the ages to whole ints
+	data['age'] = data['age'].round().astype(int)
+
+	return data	
 
 def clean(data):
 	#remove unnecessary columns
@@ -53,13 +62,12 @@ def clean(data):
 				data.loc[index,'age'] = n.groups()[0]
 				continue
 	#fills in missing ages using linear interpolation// might want to look into sklearn imputers
-	data['age'] = data['age'].interpolate(inplace=True)
+	data.to_csv( "temp.csv", index=False)
+	filtered_data = pd.read_csv('temp.csv')
+	data = clean_age(filtered_data)
 
-	#data.to_csv(o + "\\..\\results\\faulty.csv", index=False)
-	#replace any remaining ages with the average
-	data['age'].fillna(data['age'].dropna().mean(), inplace=True)
-	#round the ages to whole ints
-	data['age'] = data['age'].round().astype(int)
+	#remove temp file
+	os.remove('temp.csv')
 
 	#imputing categorical sex values based on random values
 	list_sex = data['sex'].dropna().values
@@ -77,11 +85,11 @@ def main():
 
 	print("Cleaning Train Data...\n")
 	cleaned_train = clean(train_data)
-	cleaned_train.to_csv(o + "\\..\\results\\cases_test_processed.csv", index=False)
+	cleaned_train.to_csv(o + "\\..\\results\\cases_train_processed.csv", index=False)
 
 	print("Cleaning Test Data...\n")
 	cleaned_test = clean(test_data)
-	cleaned_test.to_csv(o + "\\..\\results\\cases_train_processed.csv", index=False)
+	cleaned_test.to_csv(o + "\\..\\results\\cases_test_processed.csv", index=False)
 
 	return
 

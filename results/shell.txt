@@ -1,1 +1,0 @@
-shell (to register directory)
