@@ -14,6 +14,7 @@ test_data = pd.read_csv(o + "\\..\\data\\cases_test.csv", parse_dates = True)
 location_data= pd.read_csv(o + "\\..\\data\\location.csv", parse_dates = True)
 test_processed_path = o + "\\..\\results\\cases_test_processed.csv"
 train_processed_path = o + "\\..\\results\\cases_train_processed.csv"
+locations_path = o + "\\..\\results\\location_transformed.csv"
 
 #For Mac/Linux
 '''
@@ -22,7 +23,48 @@ test_data = pd.read_csv(o + "/../data/cases_test.csv", parse_dates = True)
 location_data= pd.read_csv(o + "/../data/location.csv", parse_dates = True)
 test_processed_path = o + "/../results/cases_test_processed.csv"
 train_processed_path = o + "/../results/cases_train_processed.csv"
+locations_path = o + "/../results/location_transformed.csv"
 '''
+
+#takes in a dataset containing all the cities in a state and returns a single row with the aggregated data
+def aggregate_states(data):
+	lat, lon = round(data['Lat'].mean(), 6), round(data['Long_'].mean(), 6)
+	t_confirmed = data['Confirmed'].sum()
+	t_deaths = data['Deaths'].sum()
+	t_recovered = data['Recovered'].sum()
+	t_active = data['Active'].sum()
+	combined_key = data.iloc[0]['Province_State'] + ', US'
+	incidence_rate = data['Incidence_Rate'].max()
+	case_fat_ratio = round((t_deaths / (t_confirmed - 1 ))*100, 6)
+
+	summary = [(data.iloc[0]['Province_State'], 'US', data.iloc[0]['Last_Update'], lat, lon, t_confirmed, t_deaths, t_recovered, t_active, combined_key, incidence_rate, case_fat_ratio)]
+
+	row = pd.DataFrame(summary, columns = list(data.columns))
+
+	return row
+
+def transform_locations(data):
+	#create dataframe of just the United States locations
+	US = data.loc[data['Country_Region'] == 'US']
+
+	#create a list of States/ Provinces in US
+	states = list(US['Province_State'].unique())
+
+	New_US = data[0:0]
+
+	#iterates through each state, groups the cities together and aggregates them
+	for state in states:
+		cities = US.loc[US['Province_State'] == state]
+		state_row = aggregate_states(cities)
+		New_US = New_US.append(state_row, ignore_index=True)
+
+	new_data = data.drop(index= list(US.index.values))
+	new_data = new_data.append(New_US, ignore_index=True)
+
+	new_data = new_data.sort_values(by=['Country_Region', 'Province_State'])
+	return new_data
+
+
 def gaussian_remove_outliers(data, column):
 	mean = data[column].mean()
 	std = data[column].std()
@@ -113,13 +155,18 @@ def main():
 
 	print("Cleaning Test Data...\n")
 	cleaned_test = clean(test_data)
+	print("Saving Test Data to file...\n")	
 	cleaned_test.to_csv(test_processed_path, index=False)
 
-	print("\nRemoving Outliers from Train Data\n")
+	print("\nRemoving Outliers from Train Data...\n")
 	processed_train = handle_outliers(cleaned_train)
+	print("Saving Train Data to file...\n")	
 	processed_train.to_csv(train_processed_path, index=False)
 
-	print("Outliers Removed")
+	print("\nTransforming Locations Dataset...\n")
+	locations_tf = transform_locations(location_data)
+	print("Saving Location Data to file...\n")	
+	locations_tf.to_csv(locations_path, index=False)
 
 	return
 
