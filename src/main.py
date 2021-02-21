@@ -77,9 +77,29 @@ def clean(data):
 
 	return data	
 
-def join_datasets(train, test):
+def join_datasets_onlatlong(train, location):
 	#one-liner join code
-	join = pd.merge(train, test, how='inner', on=["latitude", "longitude"])
+	join = pd.merge(train, location, how='inner', left_on=[
+					"latitude", "longitude"], right_on=["Lat", "Long_"])
+	join.sort_values(by='country', ascending=True, inplace=True)
+
+	#printing out missing value statistics on the join
+	print("Join statistics:\n")
+	j_na = join.isna().sum()
+	j_total = len(join)
+	print("Number of missing Values for Join:\n", j_na)
+	print("\n")
+	print("Percentage of missing values for Join:\n", round(j_na/j_total, 2))
+	print("\n")
+
+	#return the joined dataset
+	return join
+
+def join_datasets_onprovcount(train, location):
+	#one-liner join code
+	join = pd.merge(train, location, how='inner', left_on=[
+	                "province", "country"], right_on=["Province_State", "Country_Region"])
+	join.sort_values(by='country', ascending=True, inplace=True)
 
 	#printing out missing value statistics on the join
 	print("Join statistics:\n")
@@ -105,8 +125,13 @@ def main():
 	cleaned_test = clean(test_data)
 	cleaned_test.to_csv(o + "/../results/cases_test_processed.csv", index=False)
 
-	print("Producing a Join on Train & Test Data...\n")
-	merged_test = join_datasets(cleaned_train, cleaned_test)
+	print("Producing a Join on Train & Location Data using (latitude, longitue)...\n")
+	lat_long_test = join_datasets_onlatlong(cleaned_train, location_data)
+	lat_long_test.to_csv(o + "/../results/lat_long_test.csv", index=False)
+
+	print("Producing a Join on Train & Location Data using (province, country)...\n")
+	prov_coun_test = join_datasets_onprovcount(cleaned_train, location_data)
+	prov_coun_test.to_csv(o + "/../results/prov_coun_test.csv", index=False)
 
 	return
 
