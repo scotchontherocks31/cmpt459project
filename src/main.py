@@ -8,9 +8,10 @@ import pandas as pd
 
 
 o = os.getcwd()
-train_data = pd.read_csv(o + "\\..\\data\\cases_train.csv", parse_dates = True)
-test_data = pd.read_csv(o + "\\..\\data\\cases_test.csv", parse_dates = True)
-location_data= pd.read_csv(o + "\\..\\data\\location.csv", parse_dates = True)
+train_data = pd.read_csv(o + "/../data/cases_train.csv", parse_dates = True)
+test_data = pd.read_csv(o + "/../data/cases_test.csv", parse_dates = True)
+location_data= pd.read_csv(o + "/../data/location.csv", parse_dates = True)
+# Mac -> / | Windows -> \\
 
 def gaussian_remove_outliers(data, column):
 	mean = data[column].mean()
@@ -76,6 +77,21 @@ def clean(data):
 
 	return data	
 
+def join_datasets(train, test):
+	#one-liner join code
+	join = pd.merge(train, test, how='inner', on=["latitude", "longitude"])
+
+	#printing out missing value statistics on the join
+	print("Join statistics:\n")
+	j_na = join.isna().sum()
+	j_total = len(join)
+	print("Number of missing Values for Join:\n", j_na)
+	print("\n")
+	print("Percentage of missing values for Join:\n", round(j_na/j_total, 2))
+	print("\n")
+
+	#return the joined dataset
+	return join
 
 def main():
 	print("\n\nTeam Losers: Milestone 1\n\n")
@@ -83,11 +99,14 @@ def main():
 
 	print("Cleaning Train Data...\n")
 	cleaned_train = clean(train_data)
-	cleaned_train.to_csv(o + "\\..\\results\\cases_train_processed.csv", index=False)
+	cleaned_train.to_csv(o + "/../results/cases_train_processed.csv", index=False)
 
 	print("Cleaning Test Data...\n")
 	cleaned_test = clean(test_data)
-	cleaned_test.to_csv(o + "\\..\\results\\cases_test_processed.csv", index=False)
+	cleaned_test.to_csv(o + "/../results/cases_test_processed.csv", index=False)
+
+	print("Producing a Join on Train & Test Data...\n")
+	merged_test = join_datasets(cleaned_train, cleaned_test)
 
 	return
 
