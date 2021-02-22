@@ -8,7 +8,7 @@ import pandas as pd
 
 
 o = os.getcwd()
-'''
+
 train_data = pd.read_csv(o + "\\..\\data\\cases_train.csv", parse_dates = True)
 test_data = pd.read_csv(o + "\\..\\data\\cases_test.csv", parse_dates = True)
 location_data= pd.read_csv(o + "\\..\\data\\location.csv", parse_dates = True)
@@ -24,7 +24,7 @@ location_data= pd.read_csv(o + "/../data/location.csv", parse_dates = True)
 test_processed_path = o + "/../results/cases_test_processed.csv"
 train_processed_path = o + "/../results/cases_train_processed.csv"
 locations_path = o + "/../results/location_transformed.csv"
-
+'''
 
 #takes in a dataset containing all the cities in a state and returns a single row with the aggregated data
 def aggregate_states(data):
@@ -111,7 +111,7 @@ def clean(data):
 	data.drop(['source', 'additional_information'], axis=1, inplace=True)
 
 	#remove rows containing NaN values with minimal loss to data
-	data.dropna(subset=['longitude', 'latitude', 'province', 'country','date_confirmation'], inplace=True)
+	data.dropna(subset=['longitude', 'latitude', 'country','date_confirmation'], inplace=True)
 
 	#standardize age formatting
 	for index, row in tqdm(data.iterrows()):
