@@ -8,23 +8,23 @@ import pandas as pd
 
 
 o = os.getcwd()
-
+'''
 train_data = pd.read_csv(o + "\\..\\data\\cases_train.csv", parse_dates = True)
 test_data = pd.read_csv(o + "\\..\\data\\cases_test.csv", parse_dates = True)
 location_data= pd.read_csv(o + "\\..\\data\\location.csv", parse_dates = True)
 test_processed_path = o + "\\..\\results\\cases_test_processed.csv"
 train_processed_path = o + "\\..\\results\\cases_train_processed.csv"
 locations_path = o + "\\..\\results\\location_transformed.csv"
-
-#For Mac/Linux
 '''
+#For Mac/Linux
+
 train_data = pd.read_csv(o + "/../data/cases_train.csv", parse_dates = True)
 test_data = pd.read_csv(o + "/../data/cases_test.csv", parse_dates = True)
 location_data= pd.read_csv(o + "/../data/location.csv", parse_dates = True)
 test_processed_path = o + "/../results/cases_test_processed.csv"
 train_processed_path = o + "/../results/cases_train_processed.csv"
 locations_path = o + "/../results/location_transformed.csv"
-'''
+
 
 #takes in a dataset containing all the cities in a state and returns a single row with the aggregated data
 def aggregate_states(data):
@@ -37,7 +37,8 @@ def aggregate_states(data):
 	incidence_rate = data['Incidence_Rate'].max()
 	case_fat_ratio = round((t_deaths / (t_confirmed - 1 ))*100, 6)
 
-	summary = [(data.iloc[0]['Province_State'], 'US', data.iloc[0]['Last_Update'], lat, lon, t_confirmed, t_deaths, t_recovered, t_active, combined_key, incidence_rate, case_fat_ratio)]
+	summary = [(data.iloc[0]['Province_State'], 'United States', data.iloc[0]['Last_Update'], lat, lon,
+	            t_confirmed, t_deaths, t_recovered, t_active, combined_key, incidence_rate, case_fat_ratio)]
 
 	row = pd.DataFrame(summary, columns = list(data.columns))
 
@@ -145,6 +146,41 @@ def clean(data):
 
 	return data	
 
+def join_datasets_onlatlong(train, location):
+	#one-liner join code
+	join = pd.merge(train, location, how='inner', left_on=[
+					"latitude", "longitude"], right_on=["Lat", "Long_"])
+	join.sort_values(by=["country", "province"], ascending=True, inplace=True)
+
+	#printing out missing value statistics on the join
+	print("Join statistics:\n")
+	j_na = join.isna().sum()
+	j_total = len(join)
+	print("Number of missing Values for Join:\n", j_na)
+	print("\n")
+	print("Percentage of missing values for Join:\n", round(j_na/j_total, 2))
+	print("\n")
+
+	#return the joined dataset
+	return join
+
+def join_datasets_onprovcount(train, location):
+	#one-liner join code
+	join = pd.merge(train, location, how='inner', left_on=[
+	                "province", "country"], right_on=["Province_State", "Country_Region"])
+	join.sort_values(by=["country", "province"], ascending=True, inplace=True)
+
+	#printing out missing value statistics on the join
+	print("Join statistics:\n")
+	j_na = join.isna().sum()
+	j_total = len(join)
+	print("Number of missing Values for Join:\n", j_na)
+	print("\n")
+	print("Percentage of missing values for Join:\n", round(j_na/j_total, 2))
+	print("\n")
+
+	#return the joined dataset
+	return join
 
 def main():
 	print("\n\nTeam Losers: Milestone 1\n\n")
@@ -167,6 +203,14 @@ def main():
 	locations_tf = transform_locations(location_data)
 	print("Saving Location Data to file...\n")	
 	locations_tf.to_csv(locations_path, index=False)
+
+	print("Producing a Join on Train & Location Data using (latitude, longitue)...\n")
+	lat_long_test = join_datasets_onlatlong(processed_train, locations_tf)
+	lat_long_test.to_csv(o + "/../results/lat_long_test.csv", index=False)
+
+	print("Producing a Join on Train & Location Data using (province, country)...\n")
+	prov_coun_test = join_datasets_onprovcount(processed_train, locations_tf)
+	prov_coun_test.to_csv(o + "/../results/prov_coun_test.csv", index=False)
 
 	return
 
