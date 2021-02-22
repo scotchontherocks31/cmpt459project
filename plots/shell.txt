@@ -1,2 +1,3 @@
 shell (to register directory)
 add shell
+add shell V2
