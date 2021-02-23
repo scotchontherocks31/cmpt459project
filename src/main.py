@@ -150,6 +150,7 @@ def join_datasets_onlatlong(train, location):
 	#one-liner join code
 	join = pd.merge(train, location, how='inner', left_on=[
 					"latitude", "longitude"], right_on=["Lat", "Long_"])
+	join.drop(['Lat', 'Long_', 'Last_Update', 'Province_State', 'Country_Region'], axis=1, inplace=True)
 	join.sort_values(by=["country", "province"], ascending=True, inplace=True)
 
 	#printing out missing value statistics on the join
@@ -168,6 +169,7 @@ def join_datasets_onprovcount(train, location):
 	#one-liner join code
 	join = pd.merge(train, location, how='inner', left_on=[
 	                "province", "country"], right_on=["Province_State", "Country_Region"])
+	join.drop(['Lat', 'Long_', 'Last_Update', 'Province_State', 'Country_Region'], axis=1, inplace=True)
 	join.sort_values(by=["country", "province"], ascending=True, inplace=True)
 
 	#printing out missing value statistics on the join
@@ -191,26 +193,28 @@ def main():
 
 	print("Cleaning Test Data...\n")
 	cleaned_test = clean(test_data)
-	print("Saving Test Data to file...\n")	
-	cleaned_test.to_csv(test_processed_path, index=False)
 
 	print("\nRemoving Outliers from Train Data...\n")
 	processed_train = handle_outliers(cleaned_train)
-	print("Saving Train Data to file...\n")	
-	processed_train.to_csv(train_processed_path, index=False)
 
 	print("\nTransforming Locations Dataset...\n")
 	locations_tf = transform_locations(location_data)
 	print("Saving Location Data to file...\n")	
 	locations_tf.to_csv(locations_path, index=False)
 
-	print("Producing a Join on Train & Location Data using (latitude, longitue)...\n")
-	lat_long_test = join_datasets_onlatlong(processed_train, locations_tf)
-	lat_long_test.to_csv(o + "/../results/lat_long_test.csv", index=False)
+	#print("Producing a Join on Train & Location Data using (latitude, longitue)...\n")
+	#lat_long_test = join_datasets_onlatlong(processed_train, locations_tf)
+	#lat_long_test.to_csv(o + "/../results/lat_long_test.csv", index=False)
 
 	print("Producing a Join on Train & Location Data using (province, country)...\n")
 	prov_coun_test = join_datasets_onprovcount(processed_train, locations_tf)
-	prov_coun_test.to_csv(o + "/../results/prov_coun_test.csv", index=False)
+	print("Saving Train Data to file...\n")
+	prov_coun_test.to_csv(train_processed_path, index=False)
+
+	print("Producing a Join on Test & Location Data using (province, country)...\n")
+	prov_coun_test = join_datasets_onprovcount(cleaned_test, locations_tf)
+	print("Saving Test Data to file...\n")
+	prov_coun_test.to_csv(test_processed_path, index=False)
 
 	return
 
