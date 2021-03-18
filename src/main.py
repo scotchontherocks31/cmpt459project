@@ -34,6 +34,8 @@ def main():
 	build_model(train)
 
 	print("Model building completed, Evaluating models...")
+
+	
 	#-------- Functions for latter parts of the milestone-------------------------
 	#evaluate(model,train,val)
 
