@@ -1,15 +1,18 @@
-import numpy as np 
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 import os
-import re
-import random
 import math
+import numpy as np 
 import pandas as pd 
+import pickle 
+
+#Import scikit-learn metrics module for accuracy calculation
+from sklearn import metrics
 
 o = os.getcwd()
 global data 
 model_path = o + "\\..\\models\\"
+adapath = model_path + 'adaModel.pkl'
 
 '''
 #For Mac/Linux
@@ -30,6 +33,14 @@ def build_model(data):
 	#Model code here!!
 
 	#save model to model_path + "model_name.pkl"
+	return
+
+def evaluate(train, val):
+	
+	#importing models
+	#AdaBoost
+	model_unpickle = open(adapath, 'rb')
+	adaModel = pickle.load(model_unpickle)
 	return
 
 def main():
@@ -61,7 +72,7 @@ def main():
 
 
 	#-------- Functions for latter parts of the milestone-------------------------
-	#evaluate(model,train,val)
+	#evaluate(train,val)
 
 	#show_overfit(model)
 
