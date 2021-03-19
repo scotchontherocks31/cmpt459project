@@ -1,11 +1,10 @@
-import numpy as np 
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 import os
-import re
-import random
 import math
+import numpy as np 
 import pandas as pd 
+import pickle
 
 # Model-specific imports
 from sklearn.ensemble import AdaBoostClassifier
@@ -26,7 +25,7 @@ model_path = o + "/../models/"
 # converts string Series into a cataegorized int series1 for data analysis
 def categorize_column(data):
 	i = 0
-	for value in data.unique():
+	for value in tqdm(data.unique()):
 		data.replace(value, i, inplace = True)
 		i += 1
 	data = data.apply(pd.to_numeric)
@@ -37,9 +36,15 @@ def build_model(data):
 	abc  = AdaBoostClassifier(n_estimators=50, learning_rate=1)
 	x = data.drop(columns='outcome')
 	y = data['outcome']
-	model = abc.fit(x,y)
+	model1 = abc.fit(x,y)
 
 	#save model to model_path + "model_name.pkl"
+	list_pickle = open(model_path+'adaModel.pkl', 'wb')
+	pickle.dump(model1, list_pickle)
+	list_pickle.close()
+
+	print("First model saved to folder...\n")
+
 	return
 
 def main():
@@ -57,6 +62,7 @@ def main():
 
 	#might need to drop date column if classifiers can't handle it
 	data = data.drop(columns=['province', 'country'])
+	data = data.drop(columns=['date_confirmation'])
 
 	print("Splitting data into test and validation sets...\n")
 
