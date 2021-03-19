@@ -48,6 +48,14 @@ def build_model(data):
 
 	return
 
+def evaluate(train, val):
+	
+	#importing models
+	#AdaBoost
+	model_unpickle = open(adapath, 'rb')
+	adaModel = pickle.load(model_unpickle)
+	return
+
 def main():
 	print("\n\nTeam Losers: Milestone 2\n\n")
 	print("Modifying data for classifiers...\n")
