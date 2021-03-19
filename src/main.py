@@ -7,6 +7,13 @@ import random
 import math
 import pandas as pd 
 
+# Model-specific imports
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn import datasets
+
+#Import scikit-learn metrics module for accuracy calculation
+from sklearn import metrics
+
 o = os.getcwd()
 global data 
 model_path = o + "\\..\\models\\"
@@ -27,7 +34,10 @@ def categorize_column(data):
 
 def build_model(data):
 
-	#Model code here!!
+	abc  = AdaBoostClassifier(n_estimators=50, learning_rate=1)
+	x = data.drop(columns='outcome')
+	y = data['outcome']
+	model = abc.fit(x,y)
 
 	#save model to model_path + "model_name.pkl"
 	return
