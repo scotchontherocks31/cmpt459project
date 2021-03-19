@@ -19,7 +19,7 @@ model_path = o + "/../models/"
 # converts string Series into a cataegorized int series1 for data analysis
 def categorize_column(data):
 	i = 0
-	for value in data.unique():
+	for value in tqdm(data.unique()):
 		data.replace(value, i, inplace = True)
 		i += 1
 	data = data.apply(pd.to_numeric)
@@ -37,6 +37,8 @@ def main():
 	print("Modifying data for classifiers...\n")
 
 	data = pd.read_csv(o + "\\..\\data\\cases_train_processed.csv", parse_dates = True)
+	
+	print("Converting categorical data to numericals...\n")	
 	data['sex'] = categorize_column(data['sex'])
 	data['outcome'] = categorize_column(data['outcome'])
 	data['Combined_Key'] = categorize_column(data['Combined_Key'])
