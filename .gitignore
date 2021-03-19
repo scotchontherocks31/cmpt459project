@@ -22,3 +22,4 @@ test.ipynb
 !.vscode/launch.json
 !.vscode/extensions.json
 *.code-workspace
+src/test.ipynb
