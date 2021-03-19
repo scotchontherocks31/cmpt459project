@@ -16,6 +16,7 @@ from sklearn import metrics
 o = os.getcwd()
 global data 
 model_path = o + "\\..\\models\\"
+adapath = model_path + 'adaModel.pkl'
 
 '''
 #For Mac/Linux
@@ -39,7 +40,7 @@ def build_model(data):
 	model1 = abc.fit(x,y)
 
 	#save model to model_path + "model_name.pkl"
-	list_pickle = open(model_path+'adaModel.pkl', 'wb')
+	list_pickle = open(adapath, 'wb')
 	pickle.dump(model1, list_pickle)
 	list_pickle.close()
 
