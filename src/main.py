@@ -34,7 +34,7 @@ def categorize_column(data):
 
 def build_model(data):
 
-	abc  = AdaBoostClassifier(n_estimators=50, learning_rate=1)
+	abc  = AdaBoostClassifier(n_estimators=50, learning_rate=1, algorithm = 'SAMME.R')
 	x = data.drop(columns='outcome')
 	y = data['outcome']
 	model1 = abc.fit(x,y)
