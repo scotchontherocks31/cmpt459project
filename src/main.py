@@ -1,220 +1,80 @@
-import numpy as np 
 from tqdm import tqdm
+from sklearn.model_selection import train_test_split
 import os
-import re
-import random
 import math
+import numpy as np 
 import pandas as pd 
+import pickle
 
+# Model-specific imports
+
+#Import scikit-learn metrics module for accuracy calculation
+from sklearn import metrics
 
 o = os.getcwd()
+global data 
+model_path = o + "\\..\\models\\"
+adapath = model_path + 'adaModel.pkl'
 
-train_data = pd.read_csv(o + "\\..\\data\\cases_train.csv", parse_dates = True)
-test_data = pd.read_csv(o + "\\..\\data\\cases_test.csv", parse_dates = True)
-location_data= pd.read_csv(o + "\\..\\data\\location.csv", parse_dates = True)
-test_processed_path = o + "\\..\\results\\cases_test_processed.csv"
-train_processed_path = o + "\\..\\results\\cases_train_processed.csv"
-locations_path = o + "\\..\\results\\location_transformed.csv"
 '''
 #For Mac/Linux
-
-train_data = pd.read_csv(o + "/../data/cases_train.csv", parse_dates = True)
-test_data = pd.read_csv(o + "/../data/cases_test.csv", parse_dates = True)
-location_data= pd.read_csv(o + "/../data/location.csv", parse_dates = True)
-test_processed_path = o + "/../results/cases_test_processed.csv"
-train_processed_path = o + "/../results/cases_train_processed.csv"
-locations_path = o + "/../results/location_transformed.csv"
+data = pd.read_csv(o + "/../data/cases_train_processed.csv", parse_dates = True)
+model_path = o + "/../models/"
 '''
-
-#takes in a dataset containing all the cities in a state and returns a single row with the aggregated data
-def aggregate_states(data):
-	lat, lon = round(data['Lat'].mean(), 6), round(data['Long_'].mean(), 6)
-	t_confirmed = data['Confirmed'].sum()
-	t_deaths = data['Deaths'].sum()
-	t_recovered = data['Recovered'].sum()
-	t_active = data['Active'].sum()
-	combined_key = data.iloc[0]['Province_State'] + ', US'
-	incidence_rate = data['Incidence_Rate'].max()
-	case_fat_ratio = round((t_deaths / (t_confirmed - 1 ))*100, 6)
-
-	summary = [(data.iloc[0]['Province_State'], 'United States', data.iloc[0]['Last_Update'], lat, lon,
-	            t_confirmed, t_deaths, t_recovered, t_active, combined_key, incidence_rate, case_fat_ratio)]
-
-	row = pd.DataFrame(summary, columns = list(data.columns))
-
-	return row
-
-def transform_locations(data):
-	#create dataframe of just the United States locations
-	US = data.loc[data['Country_Region'] == 'US']
-
-	#create a list of States/ Provinces in US
-	states = list(US['Province_State'].unique())
-
-	New_US = data[0:0]
-
-	#iterates through each state, groups the cities together and aggregates them
-	for state in states:
-		cities = US.loc[US['Province_State'] == state]
-		state_row = aggregate_states(cities)
-		New_US = New_US.append(state_row, ignore_index=True)
-
-	new_data = data.drop(index= list(US.index.values))
-	new_data = new_data.append(New_US, ignore_index=True)
-
-	new_data = new_data.sort_values(by=['Country_Region', 'Province_State'])
-	return new_data
-
-
-def gaussian_remove_outliers(data, column):
-	mean = data[column].mean()
-	std = data[column].std()
-	cutoff = std * 3
-	lower_bound, upper_bound = mean - cutoff, mean + cutoff
-
-	lam, lom = data['latitude'].mean(), data['longitude'].mean()
-	lasd, losd = data['latitude'].std(), data['longitude'].std()
-	cutla, cutlo = lasd*2, losd*2
-	lbla, lblo = lam - cutla, lom - cutlo
-	ubla, ublo = lam + cutla, lom + cutlo
-
-	for index, row in tqdm(data.iterrows()):
-		if row[column] > upper_bound or row[column] <= lower_bound:
-			data.drop(index, axis=0, inplace=True)
-			continue
-
-		if (row['longitude'] > ublo or row['longitude'] <= lblo) and (row['latitude'] > ubla or row['latitude']<= lbla):
-			data.drop(index, axis=0, inplace=True)
-
+# converts string Series into a cataegorized int series1 for data analysis
+def categorize_column(data):
+	i = 0
+	for value in tqdm(data.unique()):
+		data.replace(value, i, inplace = True)
+		i += 1
+	data = data.apply(pd.to_numeric)
 	return data
 
-def handle_outliers(data):
+def build_model(data):
 
-	#handle oultier ages
-	data = gaussian_remove_outliers(data, 'age')
-	#data = geog_remove_outliers(data)
 
-	return data
+	#save model to model_path + "model_name.pkl"
+	print("First model saved to folder...\n")
 
-def clean_age(data): #handles specific imputations of age data
-	data['age'].interpolate(inplace=True)
-	#replace any remaining ages with the average
-	mean = data['age'].sum()/ len(data['age'])
-	data['age'].fillna(mean, inplace=True)
-	#round the ages to whole ints
-	data['age'] = data['age'].round().astype(int)
+	return
 
-	return data	
-
-def clean(data):
-	#remove unnecessary columns
-	data.drop(['source', 'additional_information'], axis=1, inplace=True)
-
-	#remove rows containing NaN values with minimal loss to data
-	data.dropna(subset=['longitude', 'latitude', 'country','date_confirmation'], inplace=True)
-
-	#standardize age formatting
-	for index, row in tqdm(data.iterrows()):
-		if row['age'] is not np.NaN:
-
-			#catch 15-35
-			m = re.match("(\d{1,})-(\d{1,})", str(row['age']))
-			if m:
-				data.loc[index,'age'] = round(sum(map(int, m.groups()))/2)
-				continue			
-			
-			#catch 80+
-			n = re.match("(\d{1,})\W", str(row['age']))
-			if n:
-				#print(row['age'])
-				data.loc[index,'age'] = n.groups()[0]
-				continue
-	#fills in missing ages using linear interpolation// might want to look into sklearn imputers
-	data.to_csv( "temp.csv", index=False)
-	filtered_data = pd.read_csv('temp.csv')
-	data = clean_age(filtered_data)
-
-	#remove temp file
-	os.remove('temp.csv')
-
-	#imputing categorical sex values based on random values
-	list_sex = data['sex'].dropna().values
-	data['sex'] = data['sex'].apply(lambda x: np.random.choice(list_sex))
-
-	#imputing categorical sex values based on mode
-	#data['sex'].fillna(data['sex'].dropna().mode()[0], inplace=True)
-
-	return data	
-
-def join_datasets_onlatlong(train, location):
-	#one-liner join code
-	join = pd.merge(train, location, how='inner', left_on=[
-					"latitude", "longitude"], right_on=["Lat", "Long_"])
-	join.drop(['Lat', 'Long_', 'Last_Update', 'Province_State', 'Country_Region'], axis=1, inplace=True)
-	join.sort_values(by=["country", "province"], ascending=True, inplace=True)
-
-	#printing out missing value statistics on the join
-	print("Join statistics:\n")
-	j_na = join.isna().sum()
-	j_total = len(join)
-	print("Number of missing Values for Join:\n", j_na)
-	print("\n")
-	print("Percentage of missing values for Join:\n", round(j_na/j_total, 2))
-	print("\n")
-
-	#return the joined dataset
-	return join
-
-def join_datasets_onprovcount(train, location):
-	#one-liner join code
-	join = pd.merge(train, location, how='inner', left_on=[
-	                "province", "country"], right_on=["Province_State", "Country_Region"])
-	join.drop(['Lat', 'Long_', 'Last_Update', 'Province_State', 'Country_Region'], axis=1, inplace=True)
-	join.sort_values(by=["country", "province"], ascending=True, inplace=True)
-
-	#printing out missing value statistics on the join
-	print("Join statistics:\n")
-	j_na = join.isna().sum()
-	j_total = len(join)
-	print("Number of missing Values for Join:\n", j_na)
-	print("\n")
-	print("Percentage of missing values for Join:\n", round(j_na/j_total, 2))
-	print("\n")
-
-	#return the joined dataset
-	return join
+def evaluate(train, val):
+	
+	#importing models
+	#AdaBoost
+	return
 
 def main():
-	print("\n\nTeam Losers: Milestone 1\n\n")
-	print("Performing Data Cleaning and Handling of NaN Values...\n")
+	print("\n\nTeam Losers: Milestone 2\n\n")
+	print("Modifying data for classifiers...\n")
 
-	print("Cleaning Train Data...\n")
-	cleaned_train = clean(train_data)	
+	data = pd.read_csv(o + "\\..\\data\\cases_train_processed.csv", parse_dates = True)
+	data['sex'] = categorize_column(data['sex'])
+	data['outcome'] = categorize_column(data['outcome'])
+	data['Combined_Key'] = categorize_column(data['Combined_Key'])
 
-	print("Cleaning Test Data...\n")
-	cleaned_test = clean(test_data)
+	#handling date column
+	#removes columns where date_confirmation has a daterange
+	data = data.loc[~data['date_confirmation'].str.contains('-'), :]  
 
-	print("\nRemoving Outliers from Train Data...\n")
-	processed_train = handle_outliers(cleaned_train)
+	#might need to drop date column if classifiers can't handle it
+	data = data.drop(columns=['province', 'country'])
+	data = data.drop(columns=['date_confirmation'])
 
-	print("\nTransforming Locations Dataset...\n")
-	locations_tf = transform_locations(location_data)
-	print("Saving Location Data to file...\n")	
-	locations_tf.to_csv(locations_path, index=False)
+	print("Splitting data into test and validation sets...\n")
 
-	#print("Producing a Join on Train & Location Data using (latitude, longitue)...\n")
-	#lat_long_test = join_datasets_onlatlong(processed_train, locations_tf)
-	#lat_long_test.to_csv(o + "/../results/lat_long_test.csv", index=False)
+	train, val = train_test_split(data, test_size=0.2, random_state=69, shuffle=True)
 
-	print("Producing a Join on Train & Location Data using (province, country)...\n")
-	prov_coun_test = join_datasets_onprovcount(processed_train, locations_tf)
-	print("Saving Train Data to file...\n")
-	prov_coun_test.to_csv(train_processed_path, index=False)
+	print("Building first model...\n")	
+	build_model(train)
 
-	print("Producing a Join on Test & Location Data using (province, country)...\n")
-	prov_coun_test = join_datasets_onprovcount(cleaned_test, locations_tf)
-	print("Saving Test Data to file...\n")
-	prov_coun_test.to_csv(test_processed_path, index=False)
+	print("Model building completed, Evaluating models...")
+
+
+	#-------- Functions for latter parts of the milestone-------------------------
+	#evaluate(model,train,val)
+
+	#show_overfit(model)
 
 	return
 
