@@ -5,26 +5,29 @@ import math
 import numpy as np
 import pandas as pd
 import pickle
-import xgboost as xgb
 import matplotlib.pyplot as plt
+
+# Model-specific imports
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn import datasets
+import xgboost as xgb
+
+# Import scikit-learn metrics module for accuracy calculation
+from sklearn import metrics
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import precision_recall_fscore_support as score, precision_score, recall_score, f1_score
 import shap
 
-# Model-specific imports
-
-# Import scikit-learn metrics module for accuracy calculation
-from sklearn import metrics
-
 o = os.getcwd()
 global data
-# model_path = o + "\\..\\models\\"
+model_path = o + "\\..\\models\\"
 
+'''
 # For Mac/Linux
 data = pd.read_csv(o + "/../data/cases_train_processed.csv", parse_dates=True)
 model_path = o + "/../models/"
-
+'''
 adapath = model_path + 'adaModel.pkl'
 xgpath = model_path + 'xgbModel.pkl'
 
@@ -83,6 +86,21 @@ def build_model(train, val):
 
     print('4\tExporting model')
     pickle.dump(xgb_model, open(xgpath, "wb"))
+
+    print('Adaboost Model:\n')
+    print('***\tADAVBOOST Initiate\t***')
+	abc  = AdaBoostClassifier(n_estimators=50, learning_rate=1, algorithm = 'SAMME.R')
+	x = data.drop(columns='outcome')
+	y = data['outcome']
+	model1 = tqdm(abc.fit(x,y))
+    print('***\tCOMPLETE\t***')
+
+	#save model to model_path + "model_name.pkl"
+	list_pickle = open(adapath, 'wb')
+	pickle.dump(model1, list_pickle)
+	list_pickle.close()
+    print('4\tExporting model')
+
     return
 
 

@@ -1,6 +1,6 @@
 # CMPT 459 Project
 
-Group Project by snooh, iabdulme and jlaxmane a.k.a Team Losers. Current work so far is to meet goals for Milestone 1.
+Group Project by snooh, iabdulme and jlaxmane a.k.a Team Losers. Current work so far is to meet goals for Milestone 2.
 
 ## Requirements
 
