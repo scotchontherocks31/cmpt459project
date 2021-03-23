@@ -23,11 +23,13 @@ import shap
 o = os.getcwd()
 global data
 model_path = o + "\\..\\models\\"
+plot_path = o + "\\..\\plots\\"
 
 '''
 # For Mac/Linux
 data = pd.read_csv(o + "/../data/cases_train_processed.csv", parse_dates=True)
 model_path = o + "/../models/"
+plot_path = o + "/../plots/"
 '''
 adapath = model_path + 'adaModel.pkl'
 xgpath = model_path + 'xgbModel.pkl'
@@ -105,19 +107,19 @@ def build_model(train, val):
 
     print('KNNboost Model:\n')
     print('***\tKNN Initiate\t***')
-    knn_model = KNeighborsClassifier(n_neighbors=1000,p=2,leaf_size=30,weights='uniform')
-	model2 = knn_model.fit(x,y)
+    knn_model = KNeighborsClassifier(n_neighbors=100,p=2,leaf_size=30,weights='uniform')
+    model2 = knn_model.fit(x,y)
     print('***\tCOMPLETE\t***\n')
-	list_pickle = open(knnpath, 'wb')
-	pickle.dump(model2, list_pickle)
-	list_pickle.close()
+    list_pickle = open(knnpath, 'wb')
+    pickle.dump(model2, list_pickle)
+    list_pickle.close()
     print('4\tExporting model\n')
 
     print('All models exported...\n')
     return
 
 
-def evaluate(train, val, filepath, str):
+def evaluate(train, val, filepath, string):
 
     # importing models
     print('*****\tEVALUATION INITIATE\t*****')
@@ -135,7 +137,7 @@ def evaluate(train, val, filepath, str):
     model_predict = None
     cm_labels = train['outcome'].unique().tolist()
 
-    if(str == xg_pass):
+    if(string == xg_pass):
         print('Setting up XGBoost vars & model prediction...')
         xg_dtrain = xgb.DMatrix(dtrain, label=dt_label)
         xg_dval = xgb.DMatrix(dval, label=dv_label)
@@ -161,7 +163,7 @@ def evaluate(train, val, filepath, str):
     ax.set_yticklabels([''] + cm_labels)
     plt.xlabel('Predicted Values')
     plt.ylabel('Actual Values')
-    plt.show()
+    plt.savefig(plot_path + string + '_Confusion_Matrix.png')
 
     print('3\tPrecision, Recall & F-Score:\n')
     precision = precision_score(dv_label, model_predict, average="macro")
@@ -173,12 +175,23 @@ def evaluate(train, val, filepath, str):
     f1 = f1_score(dv_label, model_predict, average="macro")
     print('F1 score: %f' % f1)
 
-    if(str != ada_pass):
+    if(string == xg_pass):
         print('4\tSHAP Bar Of Importance:\n')
         explainer = shap.TreeExplainer(model)
         shap_values = explainer.shap_values(dval)
-        shap.summary_plot(shap_values, dval, plot_type="bar")
+        shap.summary_plot(shap_values, dval, plot_type="bar", show=False)
+        plt.savefig(plot_path+'xg_Bar_Chart.png')
 
+    if(string == knn_pass):
+        #This segment generates one graph however it will take a significant amount of time to generate
+        '''
+        print('4\tSHAP Bar Of Importance:\n')
+        med = dtrain.median().values.reshape((1, dtrain.shape[1]))
+        explainer = shap.KernelExplainer(model.predict_proba, med)
+        shap_values = explainer.shap_values(dtrain, nsamples=100)
+        shap.summary_plot(shap_values, dval, plot_type="bar")
+        '''
+        print(metrics.classification_report(dv_label, model_predict, zero_division=1))
     print('*****\tEVALUATION COMPLETE\t*****')
     return
 
@@ -208,71 +221,72 @@ def main():
         data, test_size=0.2, random_state=69, shuffle=True)
 
     print("Building training models...\n")
-    build_model(train, val)
+    #build_model(train, val)
 
     print("Model building completed, Evaluating models...\n")
 
     # -------- Functions for latter parts of the milestone-------------------------
     evaluate(train, val, xgpath, xg_pass)
     evaluate(train, val, adapath, ada_pass)
+    evaluate(train, val, knnpath, knn_pass)
 
     # show_overfit(model)
 
-	#KNeighborsClassifier(leaf_size=50, n_neighbors=1000)
-	#knn model valid score: 0.711794140985571
-	#knn model train score: 0.7094488730906102
+    #KNeighborsClassifier(leaf_size=50, n_neighbors=1000)
+    #knn model valid score: 0.711794140985571
+    #knn model train score: 0.7094488730906102
 
-	#KNeighborsClassifier(n_neighbors=1000)
-	#knn model valid score: 0.711842723194766
-	#knn model train score: 0.7093800480156112
+    #KNeighborsClassifier(n_neighbors=1000)
+    #knn model valid score: 0.711842723194766
+    #knn model train score: 0.7093800480156112
 
-	#knn_model = KNeighborsClassifier(n_neighbors=1000,leaf_size=50,p=1)
-	#knn model valid score: 0.7119884698223511
-	#knn model train score: 0.7094691157597276
+    #knn_model = KNeighborsClassifier(n_neighbors=1000,leaf_size=50,p=1)
+    #knn model valid score: 0.7119884698223511
+    #knn model train score: 0.7094691157597276
 
-	#knn_model = KNeighborsClassifier(n_neighbors=1000,leaf_size=50,p=1,weights='distance')
-	#knn model valid score: 0.7104014509886479
-	#knn model train score: 0.7776180856102962
+    #knn_model = KNeighborsClassifier(n_neighbors=1000,leaf_size=50,p=1,weights='distance')
+    #knn model valid score: 0.7104014509886479
+    #knn model train score: 0.7776180856102962
 
-	#KNeighborsClassifier()
-	#knn model valid score: 0.6895596832439961
-	#knn model train score: 0.7289385149168228
+    #KNeighborsClassifier()
+    #knn model valid score: 0.6895596832439961
+    #knn model train score: 0.7289385149168228
 
-	#knn_model = KNeighborsClassifier(weights='distance')
-	#knn model valid score: 68.7535424527538
-	#knn model train score: 75.36507653753193
+    #knn_model = KNeighborsClassifier(weights='distance')
+    #knn model valid score: 68.7535424527538
+    #knn model train score: 75.36507653753193
 
-	#knn_model = KNeighborsClassifier(p=1)
-	#knn model valid score: 69.01588638240676
+    #knn_model = KNeighborsClassifier(p=1)
+    #knn model valid score: 69.01588638240676
     #knn model train score: 72.91206989388793
 
     #knn_model = KNeighborsClassifier(n_neighbors=100,p=1,weights='distance')
     #knn model valid score: 70.750271250668
-	#knn model train score: 77.69176892588348
+    #knn model train score: 77.69176892588348
 
-	#KNeighborsClassifier(n_neighbors=1000, p=1, weights='distance')
-	#knn model valid score: 71.04176450583796
-	#knn model train score: 77.76180856102962
+    #KNeighborsClassifier(n_neighbors=1000, p=1, weights='distance')
+    #knn model valid score: 71.04176450583796
+    #knn model train score: 77.76180856102962
 
-	#KNeighborsClassifier(leaf_size=100, n_neighbors=1000, p=1)
-	#knn model valid score: 71.2182798659131
-	#knn model train score: 70.94164848200224
+    #KNeighborsClassifier(leaf_size=100, n_neighbors=1000, p=1)
+    #knn model valid score: 71.2182798659131
+    #knn model train score: 70.94164848200224
 
-	#KNeighborsClassifier(leaf_size=100, n_neighbors=1000)
-	#knn model valid score: 71.16322002882545
-	#knn model train score: 70.92747861362008
+    #KNeighborsClassifier(leaf_size=100, n_neighbors=1000)
+    #knn model valid score: 71.16322002882545
+    #knn model train score: 70.92747861362008
 
-	#KNeighborsClassifier(n_neighbors=10)
-	#knn model valid score: 68.90900552217778
-	#knn model train score: 72.24689578669084
+    #KNeighborsClassifier(n_neighbors=10)
+    #knn model valid score: 68.90900552217778
+    #knn model train score: 72.24689578669084
 
-	#knn_model = KNeighborsClassifier(n_neighbors=1000,p=2,leaf_size=30,weights='uniform')
-	#knn model valid score: 71.1842723194766
-	#knn model train score: 70.93800480156112
+    #knn_model = KNeighborsClassifier(n_neighbors=1000,p=2,leaf_size=30,weights='uniform')
+    #knn model valid score: 71.1842723194766
+    #knn model train score: 70.93800480156112
 
-	#Overfitting: model.predict(val) < model.predict(train)
+    #Overfitting: model.predict(val) < model.predict(train)
 
-	return
+    return
 
 if __name__ == '__main__':
     main()
