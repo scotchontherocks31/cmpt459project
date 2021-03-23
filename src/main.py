@@ -85,20 +85,22 @@ def build_model(train, val):
     print('***\tCOMPLETE\t***')
 
     print('4\tExporting model')
-    pickle.dump(xgb_model, open(xgpath, "wb"))
+    list_pickle = open(xgpath, 'wb')
+    pickle.dump(xgb_model, list_pickle)
+    list_pickle.close()
 
     print('Adaboost Model:\n')
     print('***\tADAVBOOST Initiate\t***')
-	abc  = AdaBoostClassifier(n_estimators=50, learning_rate=1, algorithm = 'SAMME.R')
-	x = data.drop(columns='outcome')
-	y = data['outcome']
-	model1 = tqdm(abc.fit(x,y))
+    abc  = AdaBoostClassifier(n_estimators=75, learning_rate=1, algorithm = 'SAMME.R')
+    x = train.drop(columns='outcome')
+    y = train['outcome']
+    model1 = abc.fit(x,y)
     print('***\tCOMPLETE\t***')
 
 	#save model to model_path + "model_name.pkl"
-	list_pickle = open(adapath, 'wb')
-	pickle.dump(model1, list_pickle)
-	list_pickle.close()
+    list_pickle = open(adapath, 'wb')
+    pickle.dump(model1, list_pickle)
+    list_pickle.close()
     print('4\tExporting model')
 
     return
@@ -120,21 +122,24 @@ def evaluate(train, val, filepath, str):
 
     print('1\tAccuracy measure:\n')
     model_predict = None
+    cm_labels = train['outcome'].unique().tolist()
+
     if(str == xg_pass):
         print('Setting up XGBoost vars & model prediction...')
         xg_dtrain = xgb.DMatrix(dtrain, label=dt_label)
         xg_dval = xgb.DMatrix(dval, label=dv_label)
-
         model_predict = model.predict(xg_dval)
         train_accuracy = accuracy_score(
             model.predict(xg_dtrain), train_prediction)
-        print("Train Accuracy: %.2f%%" % (train_accuracy * 100.0))
-        accuracy = accuracy_score(model_predict, prediction)
-        print("Validation Accuracy: %.2f%%" % (accuracy * 100.0))
-
+    else:
+        model_predict = model.predict(dval)
+        train_accuracy = accuracy_score(
+            model.predict(dtrain), dt_label)
+    print("Train Accuracy: %.2f%%" % (train_accuracy * 100.0))
+    accuracy = accuracy_score(model_predict, prediction)
+    print("Validation Accuracy: %.2f%%" % (accuracy * 100.0))
     print('2\tConfusion Matrix:\n')
-    cm_labels = train['outcome'].unique().tolist()
-    cm = confusion_matrix(dv_label, model_predict, cm_labels)
+    cm = confusion_matrix(dv_label,model_predict, labels = cm_labels)
     print(cm)
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -157,10 +162,11 @@ def evaluate(train, val, filepath, str):
     f1 = f1_score(dv_label, model_predict, average="macro")
     print('F1 score: %f' % f1)
 
-    print('4\tSHAP Bar Of Importance:\n')
-    explainer = shap.TreeExplainer(model)
-    shap_values = explainer.shap_values(dval)
-    shap.summary_plot(shap_values, dval, plot_type="bar")
+    if(str != ada_pass):
+        print('4\tSHAP Bar Of Importance:\n')
+        explainer = shap.TreeExplainer(model)
+        shap_values = explainer.shap_values(dval)
+        shap.summary_plot(shap_values, dval, plot_type="bar")
 
     print('*****\tEVALUATION COMPLETE\t*****')
     return
@@ -170,10 +176,9 @@ def main():
     print("\n\nTeam Losers: Milestone 2\n\n")
     print("Modifying data for classifiers...\n")
 
-    # data = pd.read_csv(
-    #     o + "\\..\\data\\cases_train_processed.csv", parse_dates=True)
-    data = pd.read_csv(
-        o + "/../data/cases_train_processed.csv", parse_dates=True)
+    data = pd.read_csv( o + "\\..\\data\\cases_train_processed.csv", parse_dates=True)
+    #data = pd.read_csv(
+    #    o + "/../data/cases_train_processed.csv", parse_dates=True)
     data['sex'] = categorize_column(data['sex'])
     data['outcome'] = categorize_column(data['outcome'])
     data['Combined_Key'] = categorize_column(data['Combined_Key'])
@@ -198,6 +203,7 @@ def main():
 
     # -------- Functions for latter parts of the milestone-------------------------
     evaluate(train, val, xgpath, xg_pass)
+    evaluate(train, val, adapath, ada_pass)
 
     # show_overfit(model)
 

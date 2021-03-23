@@ -9,12 +9,16 @@ Must have the following libraries installed in order to run scripts/ notebooks:
  - Jupyter Notebooks
  - Regex
  - tqdm
+ - xgboost
+ - shap
 
 ```bash
 pip install pandas
 pip install jupyter
 pip install re
 pip install tqdm
+pip install xgboost
+pip install shap
 ```
 
 ## Usage
