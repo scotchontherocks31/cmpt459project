@@ -37,7 +37,7 @@ def build_model(data):
 	abc  = AdaBoostClassifier(n_estimators=50, learning_rate=1, algorithm = 'SAMME.R')
 	x = data.drop(columns='outcome')
 	y = data['outcome']
-	model1 = abc.fit(x,y)
+	model1 = tqdm(abc.fit(x,y))
 
 	#save model to model_path + "model_name.pkl"
 	list_pickle = open(adapath, 'wb')
@@ -54,6 +54,13 @@ def evaluate(train, val):
 	#AdaBoost
 	model_unpickle = open(adapath, 'rb')
 	adaModel = pickle.load(model_unpickle)
+	print('Model loaded...\n')
+
+
+
+
+
+
 	return
 
 def main():
@@ -74,17 +81,17 @@ def main():
 	data = data.drop(columns=['date_confirmation'])
 
 	print("Splitting data into test and validation sets...\n")
-
+	
 	train, val = train_test_split(data, test_size=0.2, random_state=69, shuffle=True)
 
 	print("Building first model...\n")	
 	build_model(train)
 
-	print("Model building completed, Evaluating models...")
+	print("Model building completed, Evaluating models...\n")
 
 
 	#-------- Functions for latter parts of the milestone-------------------------
-	#evaluate(model,train,val)
+	evaluate(train,val)
 
 	#show_overfit(model)
 
