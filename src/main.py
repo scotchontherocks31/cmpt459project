@@ -5,6 +5,7 @@ import math
 import numpy as np 
 import pandas as pd 
 import pickle
+from sklearn import model_selection
 
 # Model-specific imports
 from sklearn.neighbors import KNeighborsClassifier
@@ -40,7 +41,7 @@ def build_model(data):
 	X = data.drop(columns=['outcome'])
 	y = data['outcome']
 
-	knn_model = KNeighborsClassifier(n_neighbors=10)
+	knn_model = KNeighborsClassifier(n_neighbors=1000,p=2,leaf_size=30,weights='uniform')
 
 	model2 = knn_model.fit(X,y)
 
@@ -84,11 +85,82 @@ def main():
 
 	print("Model building completed, Evaluating models...")
 
+	#leaf_size = list(range(1,50))
+	#n_neighbors = list(range(1,30))
+	#p=[1,2]#Convert to dictionary
+	#hyperparameters = dict(leaf_size=leaf_size, n_neighbors=n_neighbors, p=p)#Create new KNN object
+
+	#knn_2 = KNeighborsClassifier()#Use GridSearch
+	#clf = model_selection.GridSearchCV(knn_2, hyperparameters, cv=10)#Fit the model
+
+	#print('Loading model fit......\n')
+
+	#X = data.drop(columns=['outcome'])
+	#y = data['outcome']
+
+	#best_model = clf.fit(X,y)#Print The value of best Hyperparameters
+	#print('Best leaf_size:', best_model.best_estimator_.get_params()['leaf_size'])
+	#print('Best p:', best_model.best_estimator_.get_params()['p'])
+	#print('Best n_neighbors:', best_model.best_estimator_.get_params()['n_neighbors'])
 
 	#-------- Functions for latter parts of the milestone-------------------------
 	#evaluate(train,val)
 
 	#show_overfit(model)
+
+	#KNeighborsClassifier(leaf_size=50, n_neighbors=1000)
+	#knn model valid score: 0.711794140985571
+	#knn model train score: 0.7094488730906102
+
+	#KNeighborsClassifier(n_neighbors=1000)
+	#knn model valid score: 0.711842723194766
+	#knn model train score: 0.7093800480156112
+
+	#knn_model = KNeighborsClassifier(n_neighbors=1000,leaf_size=50,p=1)
+	#knn model valid score: 0.7119884698223511
+	#knn model train score: 0.7094691157597276
+	
+	#knn_model = KNeighborsClassifier(n_neighbors=1000,leaf_size=50,p=1,weights='distance')
+	#knn model valid score: 0.7104014509886479
+	#knn model train score: 0.7776180856102962
+
+	#KNeighborsClassifier()
+	#knn model valid score: 0.6895596832439961
+	#knn model train score: 0.7289385149168228
+
+	#knn_model = KNeighborsClassifier(weights='distance')
+	#knn model valid score: 68.7535424527538
+	#knn model train score: 75.36507653753193
+
+	#knn_model = KNeighborsClassifier(p=1)
+	#knn model valid score: 69.01588638240676
+    #knn model train score: 72.91206989388793
+
+    #knn_model = KNeighborsClassifier(n_neighbors=100,p=1,weights='distance')
+    #knn model valid score: 70.750271250668
+	#knn model train score: 77.69176892588348
+
+	#KNeighborsClassifier(n_neighbors=1000, p=1, weights='distance')
+	#knn model valid score: 71.04176450583796
+	#knn model train score: 77.76180856102962
+
+	#KNeighborsClassifier(leaf_size=100, n_neighbors=1000, p=1)
+	#knn model valid score: 71.2182798659131
+	#knn model train score: 70.94164848200224
+
+	#KNeighborsClassifier(leaf_size=100, n_neighbors=1000)
+	#knn model valid score: 71.16322002882545
+	#knn model train score: 70.92747861362008
+
+	#KNeighborsClassifier(n_neighbors=10)
+	#knn model valid score: 68.90900552217778
+	#knn model train score: 72.24689578669084
+
+	#knn_model = KNeighborsClassifier(n_neighbors=1000,p=2,leaf_size=30,weights='uniform')
+	#knn model valid score: 71.1842723194766
+	#knn model train score: 70.93800480156112
+
+	#Overfitting: model.predict(val) < model.predict(train)
 
 	return
 
