@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 
 # Model-specific imports
 from sklearn.ensemble import AdaBoostClassifier
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn import datasets
 import xgboost as xgb
 
@@ -30,13 +31,13 @@ model_path = o + "/../models/"
 '''
 adapath = model_path + 'adaModel.pkl'
 xgpath = model_path + 'xgbModel.pkl'
+knnpath = model_path + 'knnModel.pkl'
 
 ada_pass = 'ada'
 xg_pass = 'xg'
 knn_pass = 'knn'
 
 # converts string Series into a cataegorized int series1 for data analysis
-
 
 def categorize_column(data):
     i = 0
@@ -95,14 +96,24 @@ def build_model(train, val):
     x = train.drop(columns='outcome')
     y = train['outcome']
     model1 = abc.fit(x,y)
-    print('***\tCOMPLETE\t***')
+    print('***\tCOMPLETE\t***\n')
 
-	#save model to model_path + "model_name.pkl"
     list_pickle = open(adapath, 'wb')
     pickle.dump(model1, list_pickle)
     list_pickle.close()
-    print('4\tExporting model')
+    print('4\tExporting model\n')
 
+    print('KNNboost Model:\n')
+    print('***\tKNN Initiate\t***')
+    knn_model = KNeighborsClassifier(n_neighbors=1000,p=2,leaf_size=30,weights='uniform')
+	model2 = knn_model.fit(x,y)
+    print('***\tCOMPLETE\t***\n')
+	list_pickle = open(knnpath, 'wb')
+	pickle.dump(model2, list_pickle)
+	list_pickle.close()
+    print('4\tExporting model\n')
+
+    print('All models exported...\n')
     return
 
 
@@ -196,10 +207,10 @@ def main():
     train, val = train_test_split(
         data, test_size=0.2, random_state=69, shuffle=True)
 
-    print("Building training model...\n")
+    print("Building training models...\n")
     build_model(train, val)
 
-    print("Model building completed, Evaluating models...")
+    print("Model building completed, Evaluating models...\n")
 
     # -------- Functions for latter parts of the milestone-------------------------
     evaluate(train, val, xgpath, xg_pass)
@@ -207,8 +218,61 @@ def main():
 
     # show_overfit(model)
 
-    return
+	#KNeighborsClassifier(leaf_size=50, n_neighbors=1000)
+	#knn model valid score: 0.711794140985571
+	#knn model train score: 0.7094488730906102
 
+	#KNeighborsClassifier(n_neighbors=1000)
+	#knn model valid score: 0.711842723194766
+	#knn model train score: 0.7093800480156112
+
+	#knn_model = KNeighborsClassifier(n_neighbors=1000,leaf_size=50,p=1)
+	#knn model valid score: 0.7119884698223511
+	#knn model train score: 0.7094691157597276
+
+	#knn_model = KNeighborsClassifier(n_neighbors=1000,leaf_size=50,p=1,weights='distance')
+	#knn model valid score: 0.7104014509886479
+	#knn model train score: 0.7776180856102962
+
+	#KNeighborsClassifier()
+	#knn model valid score: 0.6895596832439961
+	#knn model train score: 0.7289385149168228
+
+	#knn_model = KNeighborsClassifier(weights='distance')
+	#knn model valid score: 68.7535424527538
+	#knn model train score: 75.36507653753193
+
+	#knn_model = KNeighborsClassifier(p=1)
+	#knn model valid score: 69.01588638240676
+    #knn model train score: 72.91206989388793
+
+    #knn_model = KNeighborsClassifier(n_neighbors=100,p=1,weights='distance')
+    #knn model valid score: 70.750271250668
+	#knn model train score: 77.69176892588348
+
+	#KNeighborsClassifier(n_neighbors=1000, p=1, weights='distance')
+	#knn model valid score: 71.04176450583796
+	#knn model train score: 77.76180856102962
+
+	#KNeighborsClassifier(leaf_size=100, n_neighbors=1000, p=1)
+	#knn model valid score: 71.2182798659131
+	#knn model train score: 70.94164848200224
+
+	#KNeighborsClassifier(leaf_size=100, n_neighbors=1000)
+	#knn model valid score: 71.16322002882545
+	#knn model train score: 70.92747861362008
+
+	#KNeighborsClassifier(n_neighbors=10)
+	#knn model valid score: 68.90900552217778
+	#knn model train score: 72.24689578669084
+
+	#knn_model = KNeighborsClassifier(n_neighbors=1000,p=2,leaf_size=30,weights='uniform')
+	#knn model valid score: 71.1842723194766
+	#knn model train score: 70.93800480156112
+
+	#Overfitting: model.predict(val) < model.predict(train)
+
+	return
 
 if __name__ == '__main__':
     main()
