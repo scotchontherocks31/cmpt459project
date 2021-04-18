@@ -111,7 +111,7 @@ def clean(data):
 	data.drop(['source', 'additional_information'], axis=1, inplace=True)
 
 	#remove rows containing NaN values with minimal loss to data
-	data.dropna(subset=['longitude', 'latitude', 'country','date_confirmation'], inplace=True)
+	data.dropna(subset=['longitude', 'latitude', 'country'], inplace=True)
 
 	#standardize age formatting
 	for index, row in tqdm(data.iterrows()):
@@ -136,13 +136,17 @@ def clean(data):
 
 	#remove temp file
 	os.remove('temp.csv')
+    
+    #imputing missing date values based on mode\
+	mode = data['date_confirmation'].mode()
+	data['date_confirmation'].fillna(mode, inplace=True)
 
 	#imputing categorical sex values based on random values
-	list_sex = data['sex'].dropna().values
-	data['sex'] = data['sex'].apply(lambda x: np.random.choice(list_sex))
+	#list_sex = data['sex'].dropna().values
+	#data['sex'] = data['sex'].apply(lambda x: np.random.choice(list_sex))
 
 	#imputing categorical sex values based on mode
-	#data['sex'].fillna(data['sex'].dropna().mode()[0], inplace=True)
+	data['sex'].fillna(data['sex'].dropna().mode()[0], inplace=True)
 
 	return data	
 
@@ -167,11 +171,46 @@ def join_datasets_onlatlong(train, location):
 
 def join_datasets_onprovcount(train, location):
 	#one-liner join code
-	join = pd.merge(train, location, how='inner', left_on=[
+	join = pd.merge(train, location, how='left', left_on=[
 	                "province", "country"], right_on=["Province_State", "Country_Region"])
-	join.drop(['Lat', 'Long_', 'Last_Update', 'Province_State', 'Country_Region'], axis=1, inplace=True)
+	join.drop(['date_confirmation','Lat', 'Long_', 'Last_Update', 'Province_State', 'Country_Region'], axis=1, inplace=True)
 	join.sort_values(by=["country", "province"], ascending=True, inplace=True)
 
+	#fill in missing values
+	join.country.replace(['Czech Republic','Democratic Republic of the Congo','Puerto Rico','Reunion', 'South Korea','Republic of Congo'],['Czechia','Congo (Kinshasa)','United States','France', 'Korea, South','Congo (Brazzaville)'],inplace=True)
+	join.province.replace(['San Juan'],['Puerto Rico'], inplace=True)
+	for index, row in tqdm(join.iterrows()):
+		if math.isnan(row['Confirmed']):
+			filter = locations_tf['Combined_Key'] == row['country']
+			query = locations_tf[filter]
+			print(row.country, row.province)
+			try:
+				join.loc[index,'Confirmed'] = query['Confirmed'].values[0]
+			except IndexError:
+				query = locations_tf.loc[(locations_tf.Country_Region == row['country']) & (locations_tf.Province_State == 'Unknown')]
+				try:
+					join.loc[index,'Confirmed'] = query['Confirmed'].values[0]
+				except IndexError:
+					query = locations_tf.loc[(locations_tf.Country_Region == row['country']) & (locations_tf.Province_State == row['province'])]
+					try:
+						join.loc[index,'Confirmed'] = query['Confirmed'].values[0]
+					except IndexError:					
+						filter = locations_tf['Country_Region'] == row['country']
+						query = locations_tf[filter]
+						join.loc[index,'Confirmed'] = query['Confirmed'].mean().round()
+						join.loc[index,'Deaths'] = query['Deaths'].mean().round()
+						join.loc[index,'Recovered'] = query['Recovered'].mean().round()
+						join.loc[index,'Combined_Key'] = query['Country_Region'].values[0]
+						join.loc[index,'Active'] = query['Active'].mean().round()
+						join.loc[index,'Incidence_Rate'] = query['Incidence_Rate'].mean().round()
+						join.loc[index,'Case-Fatality_Ratio'] = query['Case-Fatality_Ratio'].mean().round()
+						continue
+			join.loc[index,'Deaths'] = query['Deaths'].values[0]
+			join.loc[index,'Recovered'] = query['Recovered'].values[0]
+			join.loc[index,'Combined_Key'] = query['Combined_Key'].values[0]
+			join.loc[index,'Active'] = query['Active'].values[0]
+			join.loc[index,'Incidence_Rate'] = query['Incidence_Rate'].values[0]
+			join.loc[index,'Case-Fatality_Ratio'] = query['Case-Fatality_Ratio'].values[0]
 	#printing out missing value statistics on the join
 	print("Join statistics:\n")
 	j_na = join.isna().sum()
@@ -198,8 +237,8 @@ def main():
 	processed_train = handle_outliers(cleaned_train)
 
 	print("\nTransforming Locations Dataset...\n")
-	locations_tf = transform_locations(location_data)
-	print("Saving Location Data to file...\n")	
+	locations_tf = transform_locations(location_data
+)	print("Saving Location Data to file...\n")	
 	locations_tf.to_csv(locations_path, index=False)
 
 	#print("Producing a Join on Train & Location Data using (latitude, longitue)...\n")
