@@ -197,7 +197,7 @@ def evaluate(train, val, filepath, string):
 
 
 def main():
-    print("\n\nTeam Losers: Milestone 2\n\n")
+    print("\n\nTeam Losers: Milestone 3\n\n")
     print("Modifying data for classifiers...\n")
 
     data = pd.read_csv( o + "\\..\\data\\cases_train_processed.csv", parse_dates=True)
@@ -213,7 +213,7 @@ def main():
 
     # might need to drop date column if classifiers can't handle it
     data = data.drop(columns=['province', 'country'])
-    data = data.drop(columns=['date_confirmation'])
+    #data = data.drop(columns=['date_confirmation'])
 
     print("Splitting data into test and validation sets...\n")
 
@@ -221,14 +221,17 @@ def main():
         data, test_size=0.2, random_state=69, shuffle=True)
 
     print("Building training models...\n")
-    #build_model(train, val)
+    build_model(train, val)
 
     print("Model building completed, Evaluating models...\n")
 
     # -------- Functions for latter parts of the milestone-------------------------
-    evaluate(train, val, xgpath, xg_pass)
-    evaluate(train, val, adapath, ada_pass)
-    evaluate(train, val, knnpath, knn_pass)
+
+    # Uncomment whichever you need to run
+
+    #evaluate(train, val, xgpath, xg_pass)
+    #evaluate(train, val, adapath, ada_pass)
+    #evaluate(train, val, knnpath, knn_pass)
 
     # show_overfit(model)
 
