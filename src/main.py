@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 # Model-specific imports
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn import datasets
 import xgboost as xgb
+from sklearn import datasets
 
 # Import scikit-learn metrics module for accuracy calculation
 from sklearn import metrics
@@ -49,6 +49,12 @@ def categorize_column(data):
     data = data.apply(pd.to_numeric)
     return data
 
+# converts string Series into a cataegorized int series1 for data analysis
+
+def categorize_outcome(data):
+    data = data.map({'nonhospitalized':0, 'deceased':1, 'recovered':2, 'hospitalized':3},na_action ='ignore')
+    data = data.apply(pd.to_numeric)
+    return data
 
 def build_model(train, val):
 
@@ -204,12 +210,12 @@ def main():
     #data = pd.read_csv(
     #    o + "/../data/cases_train_processed.csv", parse_dates=True)
     data['sex'] = categorize_column(data['sex'])
-    data['outcome'] = categorize_column(data['outcome'])
+    data['outcome'] = categorize_outcome(data['outcome'])
     data['Combined_Key'] = categorize_column(data['Combined_Key'])
 
     # handling date column
     # removes columns where date_confirmation has a daterange
-    data = data.loc[~data['date_confirmation'].str.contains('-'), :]
+    #data = data.loc[~data['date_confirmation'].str.contains('-'), :]
 
     # might need to drop date column if classifiers can't handle it
     data = data.drop(columns=['province', 'country'])
@@ -224,70 +230,6 @@ def main():
     build_model(train, val)
 
     print("Model building completed, Evaluating models...\n")
-
-    # -------- Functions for latter parts of the milestone-------------------------
-
-    # Uncomment whichever you need to run
-
-    #evaluate(train, val, xgpath, xg_pass)
-    #evaluate(train, val, adapath, ada_pass)
-    #evaluate(train, val, knnpath, knn_pass)
-
-    # show_overfit(model)
-
-    #KNeighborsClassifier(leaf_size=50, n_neighbors=1000)
-    #knn model valid score: 0.711794140985571
-    #knn model train score: 0.7094488730906102
-
-    #KNeighborsClassifier(n_neighbors=1000)
-    #knn model valid score: 0.711842723194766
-    #knn model train score: 0.7093800480156112
-
-    #knn_model = KNeighborsClassifier(n_neighbors=1000,leaf_size=50,p=1)
-    #knn model valid score: 0.7119884698223511
-    #knn model train score: 0.7094691157597276
-
-    #knn_model = KNeighborsClassifier(n_neighbors=1000,leaf_size=50,p=1,weights='distance')
-    #knn model valid score: 0.7104014509886479
-    #knn model train score: 0.7776180856102962
-
-    #KNeighborsClassifier()
-    #knn model valid score: 0.6895596832439961
-    #knn model train score: 0.7289385149168228
-
-    #knn_model = KNeighborsClassifier(weights='distance')
-    #knn model valid score: 68.7535424527538
-    #knn model train score: 75.36507653753193
-
-    #knn_model = KNeighborsClassifier(p=1)
-    #knn model valid score: 69.01588638240676
-    #knn model train score: 72.91206989388793
-
-    #knn_model = KNeighborsClassifier(n_neighbors=100,p=1,weights='distance')
-    #knn model valid score: 70.750271250668
-    #knn model train score: 77.69176892588348
-
-    #KNeighborsClassifier(n_neighbors=1000, p=1, weights='distance')
-    #knn model valid score: 71.04176450583796
-    #knn model train score: 77.76180856102962
-
-    #KNeighborsClassifier(leaf_size=100, n_neighbors=1000, p=1)
-    #knn model valid score: 71.2182798659131
-    #knn model train score: 70.94164848200224
-
-    #KNeighborsClassifier(leaf_size=100, n_neighbors=1000)
-    #knn model valid score: 71.16322002882545
-    #knn model train score: 70.92747861362008
-
-    #KNeighborsClassifier(n_neighbors=10)
-    #knn model valid score: 68.90900552217778
-    #knn model train score: 72.24689578669084
-
-    #knn_model = KNeighborsClassifier(n_neighbors=1000,p=2,leaf_size=30,weights='uniform')
-    #knn model valid score: 71.1842723194766
-    #knn model train score: 70.93800480156112
-
-    #Overfitting: model.predict(val) < model.predict(train)
 
     return
 
