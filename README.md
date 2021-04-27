@@ -9,12 +9,18 @@ Must have the following libraries installed in order to run scripts/ notebooks:
  - Jupyter Notebooks
  - tqdm
  - sklearn
+ - xgboost
+ - adaboost
+ - (Optional) numpy.multiarray
 
 ```bash
 pip install pandas
 pip install jupyter
 pip install tqdm
 pip install sklearn
+pip install xgboost
+pip install adaboost
+pip install numpy.core.multiarray
 ```
 
 ## Usage
