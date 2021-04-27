@@ -1,8 +1,10 @@
 # results
-results/**
 
 # plots
-plots/**
+# plots/**
+
+# models
+models/**
 
 #other files
 *.DS_Store
