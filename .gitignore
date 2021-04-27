@@ -2,7 +2,7 @@
 results/**
 
 # plots
-plots/**
+#plots/**
 
 #other files
 *.DS_Store
